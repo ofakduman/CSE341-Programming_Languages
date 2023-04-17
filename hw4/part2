@@ -1,0 +1,53 @@
+%knowledge base
+% schedule connections and its costs
+schedules([schedule(canakkale, erzincan, 6),
+         schedule(erzincan, canakkale, 6),
+         schedule(erzincan, antalya, 3),
+         schedule(antalya, erzincan, 3),
+         schedule(izmir, antalya, 2),
+         schedule(antalya, izmir, 2),
+         schedule(diyarbakir, antalya, 4),
+         schedule(antalya, diyarbakir, 4),
+         schedule(izmir, istanbul, 2),
+         schedule(istanbul, izmir, 2),
+         schedule(rize, istanbul, 4),
+         schedule(istanbul, rize, 4),
+         schedule(izmir, ankara, 6),
+         schedule(ankara, izmir, 6),
+         schedule(diyarbakir, ankara, 8),
+         schedule(ankara, diyarbakir, 8),
+         schedule(rize, ankara, 5),
+         schedule(ankara, rize, 5),
+         schedule(ankara, istanbul, 1),
+         schedule(istanbul, ankara, 1),
+         schedule(ankara, van, 4),
+         schedule(van, ankara, 4),
+         schedule(gaziantep, van, 3),
+         schedule(van, gaziantep, 3)]).
+
+% Find the cost of a direct schedule between two cities
+cost(X, Y, C) :- schedules(SCHEDULES), member(schedule(X, Y, C), SCHEDULES).
+
+% Find the cost of the shortest route between two cities
+connection(X, Y, C) :- connection(X, Y, C, []).
+
+connection(X, Y, C, _) :- cost(X, Y, C).
+
+% Base case: X and Z are the same node
+connection(X, Z, C, Visited_place) :- 
+  X = Z,
+  C = 0.
+
+% Recursive case: X and Z are different nodes
+connection(X, Z, C, Visited_place) :- 
+  % X is not in the list of visited nodes
+  \+ member(X, Visited_place),
+  
+  % Find a neighboring node Y of X with a cost of CA
+  cost(X, Y, CA),
+  
+  % Recursively find a connection from Y to Z with a cost of CB
+  connection(Y, Z, CB, [X | Visited_place]),
+  
+  % The total cost is the sum of CA and CB
+  C is CA + CB.

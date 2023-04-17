@@ -1,0 +1,163 @@
+%facts
+
+instructor(allame, 1004, smartboard).
+instructor(mustafa, 1001, _).
+instructor(halis, 1002, projector).
+instructor(hakan, 1003, smartboard).
+
+course(1001, tarik,    10,4, class1).
+course(1001, cemal,  6, 3, class1).
+course(1002, kemal,5, 3, class1).
+course(1003, temrik, 10,10,class2).
+
+
+schedule(class2, 8,  1001).
+schedule(class2, 9,  1001).
+schedule(class2, 10, 1001).
+schedule(class2, 11, 1001).
+schedule(class2, 12, _).
+schedule(class2, 13, _).
+schedule(class2, 14, 1003).
+schedule(class2, 15, 1003).
+schedule(class2, 16, 1003).
+
+schedule(class3, 8,  1003).
+schedule(class3, 14, 1001).
+schedule(class3, 15, 1001).
+schedule(class3, 16, _).
+
+schedule(class1, 8,  1001).
+schedule(class1, 9,  1001).
+schedule(class1, 10, 1001).
+schedule(class1, 15, 1002).
+schedule(class1, 16, 1002).
+
+%student(id , class, handicapped)
+student(11, 1001, no).
+student(11, 1001, no).
+student(11, 1002, no).
+
+student(22, 1001, no).
+student(22, 1001, no).
+
+student(33, 1001, yes).
+student(33, 1002, yes).
+
+classroom(class2, 11, hcapped).
+
+classroom(class1, 10, projector).
+
+classroom(class2, 11, smartboard).
+
+classroom(class3, 12, projector).
+
+
+
+
+%instructor(id, courseid, need)
+
+%summing courses
+sumlist([],0).
+ssumlist([H|T],N) :- sumlist(T,N1), N is N1+H.
+
+
+% to reversing course list
+
+reverse(List, Reversed) :-
+          reverse(List, [], Reversed).
+
+reverse([], Reversed, Reversed).
+reverse([Head|Tail], SoFar, Reversed) :-
+          reverse(Tail, [Head|SoFar], Reversed).
+
+
+% Adds a student to the system with a given ID, list of courses, and handicapped status
+add_student(ID, Courses, Handicapped) :-
+  assertz(student(ID, Courses, Handicapped)).
+
+% Adds a course to the system with a given ID, instructor, capacity, hours, room ID, list of student IDs, equipment, and handicapped status
+add_course(ID, Instructor, Capacity, Hours, RoomID, StudentIDs, Equipment, Handicapped) :-
+  assertz(course(ID, Instructor, Capacity, Hours, RoomID, StudentIDs, Equipment, Handicapped)).
+
+% Adds a room to the system with a given ID, capacity, hours, equipment, and handicapped status
+add_room(ID, Capacity, Hours, Equipment, Handicapped) :-
+  assertz(room(ID, Capacity, Hours, Equipment, Handicapped)).
+
+% Checks if the schedules of two courses conflict
+is_conflict(CourseID1, CourseID2) :-
+  % Find the hours of the two courses
+  doluluk(_, CourseID1, Hours1),
+  doluluk(_, CourseID2, Hours2),
+  
+  % Check if there are any common elements in the lists of hours
+  common_ones(Hours1, Hours2).
+
+% Returns true if there are any common elements in two lists, false otherwise
+common_ones(List1, List2) :-
+  % Check if any element in List1 is a member of List2
+  member(Element, List1),
+  member(Element, List2).
+
+% to check courses consistens
+consistent(_Witness, []).
+consistent(Witness , [QQ|Theory]) :-
+	QQ =.. [Q, P, _],
+	suspects(S),
+	forall((testimony(Witness , Answer), member(Person, S)),
+	       (
+	           QQ =.. [Q, Person, Answer],
+		   testimony(Witness, QQ)   % testimony agrees
+	       ;
+	           QQQ =.. [Q, P, _],
+		   \+ testimony(Witness, QQQ)   % no testimony on subject
+	       )),
+	consistent(Witness , Theory).
+
+% Adds a student to the system with a given ID, list of courses, and handicapped status
+add_student(ID, Courses, Handicapped) :-
+  assertz(student(ID, Courses, Handicapped)).
+
+% Adds a course to the system with a given ID, instructor, capacity, hours, room ID, list of student IDs, equipment, and handicapped status
+add_course(ID, Instructor, Capacity, Hours, RoomID, StudentIDs, Equipment, Handicapped) :-
+  assertz(course(ID, Instructor, Capacity, Hours, RoomID, StudentIDs, Equipment, Handicapped)).
+
+% Adds a room to the system with a given ID, capacity, hours, equipment, and handicapped status
+add_room(ID, Capacity, Hours, Equipment, Handicapped) :-
+  assertz(room(ID, Capacity, Hours, Equipment, Handicapped)).
+
+% Checks if the schedules of two courses conflict
+is_conflict(CourseID1, CourseID2) :-
+  % Find the hours of the two courses
+  doluluk(_, CourseID1, Hours1),
+  doluluk(_, CourseID2, Hours2),
+  
+  % Check if there are any common elements in the lists of hours
+  common_ones(Hours1, Hours2).
+
+% Returns true if there are any common elements in two lists, false otherwise
+common_ones(List1, List2) :-
+  % Check if any element in List1 is a member of List2
+  member(Element, List1),
+  member(Element, List2).
+
+% Checks if a student can be enrolled in a course
+check_enroll(StudentID, CourseID) :-
+  % Check if the student is not already enrolled in the course
+  \+ member(StudentID, StudentIDs),
+  
+  % Check if there is enough capacity in the course for the student
+  length(StudentIDs, NumStudents),
+  NumStudents < Capacity,
+  
+  % Check if the course has access for handicapped students (if the student is handicapped)
+  (Handicapped = handicapped -> room(RoomID, _, _, _, Handicapped); true),
+  
+  % Check if the student is not enrolled in any courses that conflict with the given course
+  findall(Conflict, (member(Course, Courses), is_conflict(CourseID, Course)), Conflicts),
+  length(Conflicts, NumConflicts),
+  NumConflicts = 0.
+
+  %to suspect courses according to ids
+suspect([course1,esra], art).
+suspect([course2,mete], sport).
+suspect([course3,kerim], draw).
